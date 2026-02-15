@@ -49,6 +49,7 @@ export default function SignupScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
+       <Text style={styles.heading}>Create Account 🚍</Text>
 
       <TextInput
         placeholder="Name"

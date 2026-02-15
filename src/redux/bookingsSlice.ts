@@ -34,7 +34,9 @@ export const fetchUserBookings = createAsyncThunk(
 const bookingsSlice = createSlice({
   name: "bookings",
   initialState,
-  reducers: {},
+  reducers: {
+    clearBookings: () => initialState, // 🔥 reset on logout
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserBookings.pending, (state) => {
@@ -53,4 +55,5 @@ const bookingsSlice = createSlice({
   },
 });
 
+export const { clearBookings } = bookingsSlice.actions;
 export default bookingsSlice.reducer;

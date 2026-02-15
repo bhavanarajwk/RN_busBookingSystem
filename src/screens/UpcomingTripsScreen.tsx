@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,19 +7,30 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
 import { RootState, AppDispatch } from "../redux/store";
-import { fetchUserBookings } from "../redux/bookingsSlice";
+import { fetchUserBookings, clearBookings } from "../redux/bookingsSlice";
+import { logout } from "../redux/authSlice";
+import { RootStackParamList } from "../navigation/AppNavigator";
 import API from "../api/axiosConfig";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function UpcomingTripsScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<NavigationProp>();
 
   const { user } = useSelector((state: RootState) => state.auth);
   const { upcoming, loading, error } = useSelector(
     (state: RootState) => state.bookings
   );
+
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -27,7 +38,14 @@ export default function UpcomingTripsScreen() {
     }
   }, [user, dispatch]);
 
-  const handleCancel = async (bookingId: string) => {
+  const onRefresh = async () => {
+    if (!user?.id) return;
+    setRefreshing(true);
+    await dispatch(fetchUserBookings(user.id));
+    setRefreshing(false);
+  };
+
+  const handleCancel = (bookingId: string) => {
     Alert.alert(
       "Cancel Booking",
       "Are you sure you want to cancel this trip?",
@@ -38,7 +56,9 @@ export default function UpcomingTripsScreen() {
           onPress: async () => {
             try {
               await API.post(`/api/bookings/cancel/${bookingId}`);
-              dispatch(fetchUserBookings(user.id));
+              if (user?.id) {
+                dispatch(fetchUserBookings(user.id));
+              }
             } catch (error) {
               Alert.alert("Error", "Failed to cancel booking");
             }
@@ -48,18 +68,44 @@ export default function UpcomingTripsScreen() {
     );
   };
 
-  if (loading) {
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel" },
+      {
+        text: "Logout",
+        onPress: () => {
+          dispatch(logout());
+          dispatch(clearBookings());
+
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Intro" }],
+          });
+        },
+      },
+    ]);
+  };
+
+  if (loading && !refreshing) {
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
   }
 
   return (
     <View style={styles.container}>
+      {/* Logout Button */}
+      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
+
       {upcoming.length === 0 ? (
         <Text style={styles.empty}>No upcoming trips found 🚍</Text>
       ) : (
         <FlatList
           data={upcoming}
           keyExtractor={(item) => item.id.toString()}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           renderItem={({ item }) => {
             const bus = item.bus;
 
@@ -69,17 +115,16 @@ export default function UpcomingTripsScreen() {
                   {bus?.from} → {bus?.to}
                 </Text>
 
-                <Text>
-                  Time: {bus?.timeFrom} - {bus?.timeTo}
+                <Text style={styles.time}>
+                  {bus?.timeFrom} - {bus?.timeTo}
                 </Text>
 
                 <Text>Seats: {item.numberOfSeats}</Text>
 
                 <Text style={styles.price}>
-                  Total: ₹ {item.numberOfSeats * bus?.price}
+                  Total: ₹ {item.numberOfSeats * (bus?.price || 0)}
                 </Text>
 
-                {/* Cancel Button */}
                 <TouchableOpacity
                   style={styles.cancelBtn}
                   onPress={() => handleCancel(item.id)}
@@ -103,6 +148,18 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#f8f9fa",
   },
+  logoutBtn: {
+    alignSelf: "flex-end",
+    marginBottom: 10,
+    backgroundColor: "#333",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  logoutText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
   card: {
     backgroundColor: "#fff",
     padding: 15,
@@ -113,6 +170,10 @@ const styles = StyleSheet.create({
   route: {
     fontSize: 18,
     fontWeight: "bold",
+    marginBottom: 5,
+  },
+  time: {
+    color: "#666",
     marginBottom: 5,
   },
   price: {
