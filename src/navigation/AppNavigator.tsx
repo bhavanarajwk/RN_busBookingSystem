@@ -6,11 +6,15 @@ import IntroScreen from "../screens/IntroScreen";
 import LoginScreen from "../screens/LoginScreen";
 import BusesScreen from "../screens/BusesScreen";
 
+import SignupScreen from "../screens/SignupScreen";
+
 export type RootStackParamList = {
   Intro: undefined;
   Login: undefined;
+  Signup: undefined;
   Buses: undefined;
 };
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,6 +28,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Intro" component={IntroScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Buses" component={BusesScreen} />
+        <Stack.Screen name="Signup" component={SignupScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -11,6 +11,8 @@ export default function IntroScreen({ navigation }: Props) {
       <Text style={styles.title}>Bus Booking App 🚍</Text>
 
       <Button title="Login" onPress={() => navigation.navigate("Login")} />
+      <View style={{ marginTop: 10 }} />
+      <Button title="Sign Up" onPress={() => navigation.navigate("Signup")} />
     </View>
   );
 }
