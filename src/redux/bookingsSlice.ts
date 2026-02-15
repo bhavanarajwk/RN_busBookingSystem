@@ -2,13 +2,15 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import API from "../api/axiosConfig";
 
 interface BookingState {
-  bookings: any[];
+  upcoming: any[];
+  history: any[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: BookingState = {
-  bookings: [],
+  upcoming: [],
+  history: [],
   loading: false,
   error: null,
 };
@@ -19,8 +21,10 @@ export const fetchUserBookings = createAsyncThunk(
     try {
       const response = await API.get(`/api/users/${userId}`);
 
-      // 🔥 FIX: backend returns upcomingBookings
-      return response.data.upcomingBookings || [];
+      return {
+        upcoming: response.data.upcomingBookings || [],
+        history: response.data.bookingHistory || [],
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue("Failed to fetch bookings");
     }
@@ -39,7 +43,8 @@ const bookingsSlice = createSlice({
       })
       .addCase(fetchUserBookings.fulfilled, (state, action) => {
         state.loading = false;
-        state.bookings = action.payload;
+        state.upcoming = action.payload.upcoming;
+        state.history = action.payload.history;
       })
       .addCase(fetchUserBookings.rejected, (state, action) => {
         state.loading = false;
