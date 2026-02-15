@@ -5,20 +5,32 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
 import { fetchBuses } from "../redux/busesSlice";
 import { RootState, AppDispatch } from "../redux/store";
+import { RootStackParamList } from "../navigation/AppNavigator";
+
+type NavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Buses"
+>;
 
 export default function BusesScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<NavigationProp>();
+
   const { buses, loading, error } = useSelector(
     (state: RootState) => state.buses
   );
 
   useEffect(() => {
     dispatch(fetchBuses());
-  }, []);
+  }, [dispatch]);
 
   if (loading) {
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
@@ -30,7 +42,12 @@ export default function BusesScreen() {
         data={buses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+              navigation.navigate("BusDetails", { bus: item })
+            }
+          >
             {/* Bus Name */}
             <Text style={styles.busName}>{item.busName}</Text>
 
@@ -59,9 +76,10 @@ export default function BusesScreen() {
                 </Text>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
+
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
