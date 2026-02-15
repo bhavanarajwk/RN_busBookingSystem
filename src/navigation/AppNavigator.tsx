@@ -8,6 +8,7 @@ import BusesScreen from "../screens/BusesScreen";
 
 import SignupScreen from "../screens/SignupScreen";
 
+
 export type RootStackParamList = {
   Intro: undefined;
   Login: undefined;
