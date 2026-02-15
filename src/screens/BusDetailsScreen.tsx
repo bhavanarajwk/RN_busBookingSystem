@@ -7,24 +7,37 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSelector } from "react-redux";
+
 import { RootStackParamList } from "../navigation/AppNavigator";
+import { RootState } from "../redux/store";
+import API from "../api/axiosConfig";
 
 type BusDetailsRouteProp = RouteProp<
   RootStackParamList,
   "BusDetails"
 >;
 
+type NavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "BusDetails"
+>;
+
 export default function BusDetailsScreen() {
   const route = useRoute<BusDetailsRouteProp>();
+  const navigation = useNavigation<NavigationProp>();
+
   const { bus } = route.params;
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const [tickets, setTickets] = useState("1");
 
   const ticketCount = Number(tickets);
   const totalPrice = ticketCount * bus.price;
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!ticketCount || ticketCount <= 0) {
       Alert.alert("Error", "Please enter valid number of tickets");
       return;
@@ -35,10 +48,28 @@ export default function BusDetailsScreen() {
       return;
     }
 
-    Alert.alert(
-      "Booking Successful 🎉",
-      `You booked ${ticketCount} tickets.\nTotal: ₹ ${totalPrice}`
-    );
+    try {
+      await API.post("/api/bookings/book", {
+        userId: user.id,
+        busId: bus.id,
+        numberOfSeats: ticketCount,
+      });
+
+      Alert.alert(
+        "Booking Successful 🎉",
+        "Your ticket has been booked.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              navigation.navigate("UpcomingTrips");
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Booking Failed", "Something went wrong");
+    }
   };
 
   return (
@@ -59,7 +90,6 @@ export default function BusDetailsScreen() {
         Seats Available: {bus.seatsAvailable}
       </Text>
 
-      {/* Ticket Input */}
       <Text style={styles.label}>Number of Tickets</Text>
 
       <TextInput
@@ -69,12 +99,10 @@ export default function BusDetailsScreen() {
         onChangeText={setTickets}
       />
 
-      {/* Total Price */}
       <Text style={styles.total}>
         Total Price: ₹ {isNaN(totalPrice) ? 0 : totalPrice}
       </Text>
 
-      {/* Book Button */}
       <TouchableOpacity style={styles.button} onPress={handleBooking}>
         <Text style={styles.buttonText}>Book Tickets</Text>
       </TouchableOpacity>
