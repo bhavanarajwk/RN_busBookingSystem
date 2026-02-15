@@ -5,29 +5,17 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  ImageBackground,
   Alert,
 } from "react-native";
-import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
-
-import { RootStackParamList } from "../navigation/AppNavigator";
 import { RootState } from "../redux/store";
 import API from "../api/axiosConfig";
 
-type BusDetailsRouteProp = RouteProp<
-  RootStackParamList,
-  "BusDetails"
->;
-
-type NavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "BusDetails"
->;
-
 export default function BusDetailsScreen() {
-  const route = useRoute<BusDetailsRouteProp>();
-  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
 
   const { bus } = route.params;
   const { user } = useSelector((state: RootState) => state.auth);
@@ -35,7 +23,7 @@ export default function BusDetailsScreen() {
   const [tickets, setTickets] = useState("1");
 
   const ticketCount = Number(tickets);
-  const totalPrice = ticketCount * bus.price;
+  const total = ticketCount * bus.price;
 
   const handleBooking = async () => {
     if (!ticketCount || ticketCount <= 0) {
@@ -50,7 +38,7 @@ export default function BusDetailsScreen() {
 
     try {
       await API.post("/api/bookings/book", {
-        userId: user.id,
+        userId: user?.id,
         busId: bus.id,
         numberOfSeats: ticketCount,
       });
@@ -62,8 +50,11 @@ export default function BusDetailsScreen() {
           {
             text: "OK",
             onPress: () => {
-              navigation.navigate("Trips");
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Trips" }],
 
+              });
             },
           },
         ]
@@ -74,96 +65,92 @@ export default function BusDetailsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.busName}>{bus.busName}</Text>
+    <ImageBackground
+      source={{
+        uri: "https://images.unsplash.com/photo-1494515843206-f3117d3f51b7",
+      }}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <Text style={styles.heading}>Bus Details 🚍</Text>
 
-      <Text style={styles.route}>
-        {bus.from} → {bus.to}
-      </Text>
+        <View style={styles.card}>
+          <Text style={styles.route}>
+            {bus.from} → {bus.to}
+          </Text>
 
-      <Text style={styles.time}>
-        Departure: {bus.timeFrom} - {bus.timeTo}
-      </Text>
+          <Text>
+            {bus.timeFrom} - {bus.timeTo}
+          </Text>
 
-      <Text style={styles.price}>₹ {bus.price} per seat</Text>
+          <Text style={styles.price}>₹ {bus.price}</Text>
 
-      <Text style={styles.available}>
-        Seats Available: {bus.seatsAvailable}
-      </Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            value={tickets}
+            onChangeText={setTickets}
+          />
 
-      <Text style={styles.label}>Number of Tickets</Text>
+          <Text style={styles.total}>Total: ₹ {total}</Text>
 
-      <TextInput
-        style={styles.input}
-        keyboardType="numeric"
-        value={tickets}
-        onChangeText={setTickets}
-      />
-
-      <Text style={styles.total}>
-        Total Price: ₹ {isNaN(totalPrice) ? 0 : totalPrice}
-      </Text>
-
-      <TouchableOpacity style={styles.button} onPress={handleBooking}>
-        <Text style={styles.buttonText}>Book Tickets</Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleBooking}
+          >
+            <Text style={styles.buttonText}>Book Tickets</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
+    backgroundColor: "rgba(255,255,255,0.95)",
     padding: 20,
-    backgroundColor: "#f8f9fa",
   },
-  busName: {
-    fontSize: 18,
-    fontWeight: "600",
+  heading: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
     color: "#1976d2",
-    marginBottom: 10,
+  },
+  card: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 16,
+    elevation: 5,
   },
   route: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 8,
-  },
-  time: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 10,
   },
   price: {
-    fontSize: 16,
-    fontWeight: "600",
     color: "#2e7d32",
-    marginBottom: 8,
-  },
-  available: {
-    fontSize: 14,
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    marginBottom: 5,
+    fontWeight: "bold",
+    marginVertical: 10,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+    borderColor: "#ddd",
+    borderRadius: 10,
     padding: 10,
-    marginBottom: 15,
+    marginVertical: 10,
   },
   total: {
-    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 18,
   },
   button: {
     backgroundColor: "#1976d2",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
+    marginTop: 10,
   },
   buttonText: {
     color: "#fff",

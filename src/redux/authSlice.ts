@@ -26,15 +26,13 @@ export const loginUser = createAsyncThunk(
     thunkAPI
   ) => {
     try {
-        console.log("Sending login request...");
       const response = await API.post("/api/auth/login", {
         email,
         password,
       });
-    console.log("Response received:", response.data);
+
       return response.data;
     } catch (error: any) {
-        console.log("Login error:", error.message);
       return thunkAPI.rejectWithValue("Invalid credentials");
     }
   }
@@ -44,9 +42,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: (state) => {
-      state.user = null;
-    },
+    logout: () => initialState, // 🔥 completely reset auth state
   },
   extraReducers: (builder) => {
     builder
