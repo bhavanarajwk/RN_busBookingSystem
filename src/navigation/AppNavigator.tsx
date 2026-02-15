@@ -8,13 +8,16 @@ import BusesScreen from "../screens/BusesScreen";
 
 import SignupScreen from "../screens/SignupScreen";
 
+import BusDetailsScreen from "../screens/BusDetailsScreen";
 
 export type RootStackParamList = {
   Intro: undefined;
   Login: undefined;
   Signup: undefined;
   Buses: undefined;
+  BusDetails: { bus: any };
 };
+
 
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -30,6 +33,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Buses" component={BusesScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="BusDetails" component={BusDetailsScreen} />
+
 
       </Stack.Navigator>
     </NavigationContainer>
