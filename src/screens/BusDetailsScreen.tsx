@@ -62,7 +62,8 @@ export default function BusDetailsScreen() {
           {
             text: "OK",
             onPress: () => {
-              navigation.navigate("UpcomingTrips");
+              navigation.navigate("Trips");
+
             },
           },
         ]

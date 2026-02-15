@@ -5,19 +5,15 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
-  Alert,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../redux/store";
 import { fetchUserBookings } from "../redux/bookingsSlice";
-import API from "../api/axiosConfig";
 
-export default function UpcomingTripsScreen() {
+export default function BookingHistoryScreen() {
   const dispatch = useDispatch<AppDispatch>();
-
   const { user } = useSelector((state: RootState) => state.auth);
-  const { upcoming, loading, error } = useSelector(
+  const { history, loading, error } = useSelector(
     (state: RootState) => state.bookings
   );
 
@@ -27,38 +23,19 @@ export default function UpcomingTripsScreen() {
     }
   }, [user, dispatch]);
 
-  const handleCancel = async (bookingId: string) => {
-    Alert.alert(
-      "Cancel Booking",
-      "Are you sure you want to cancel this trip?",
-      [
-        { text: "No" },
-        {
-          text: "Yes",
-          onPress: async () => {
-            try {
-              await API.post(`/api/bookings/cancel/${bookingId}`);
-              dispatch(fetchUserBookings(user.id));
-            } catch (error) {
-              Alert.alert("Error", "Failed to cancel booking");
-            }
-          },
-        },
-      ]
-    );
-  };
-
   if (loading) {
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
   }
 
   return (
     <View style={styles.container}>
-      {upcoming.length === 0 ? (
-        <Text style={styles.empty}>No upcoming trips found 🚍</Text>
+      <Text style={styles.heading}>Booking History 📜</Text>
+
+      {history.length === 0 ? (
+        <Text style={styles.empty}>No past bookings found</Text>
       ) : (
         <FlatList
-          data={upcoming}
+          data={history}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => {
             const bus = item.bus;
@@ -78,14 +55,6 @@ export default function UpcomingTripsScreen() {
                 <Text style={styles.price}>
                   Total: ₹ {item.numberOfSeats * bus?.price}
                 </Text>
-
-                {/* Cancel Button */}
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => handleCancel(item.id)}
-                >
-                  <Text style={styles.cancelText}>Cancel Trip</Text>
-                </TouchableOpacity>
               </View>
             );
           }}
@@ -103,6 +72,12 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#f8f9fa",
   },
+  heading: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#1976d2",
+  },
   card: {
     backgroundColor: "#fff",
     padding: 15,
@@ -118,18 +93,6 @@ const styles = StyleSheet.create({
   price: {
     fontWeight: "bold",
     color: "#2e7d32",
-    marginTop: 5,
-  },
-  cancelBtn: {
-    backgroundColor: "#e53935",
-    padding: 8,
-    borderRadius: 6,
-    marginTop: 10,
-    alignSelf: "flex-start",
-  },
-  cancelText: {
-    color: "#fff",
-    fontWeight: "bold",
   },
   error: {
     color: "red",
